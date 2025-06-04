@@ -17,12 +17,35 @@ function App() {
 
   const categories = ['Entradas', 'Platos fuertes', 'Bebidas', 'Postres'];
 
-  const handleAddToCart = (product, selectedExtras) => {
-    setCartItems((prevItems) => [
+const handleAddToCart = (product, selectedExtras) => {
+  setCartItems((prevItems) => {
+    // Busca si el producto ya está en el carrito con los mismos extras
+    const existingIndex = prevItems.findIndex(
+      item => item.id === product.id && 
+      JSON.stringify(item.extras) === JSON.stringify(selectedExtras)
+    );
+
+    if (existingIndex >= 0) {
+      // Si existe, incrementa la cantidad
+      const newItems = [...prevItems];
+      newItems[existingIndex] = {
+        ...newItems[existingIndex],
+        quantity: (newItems[existingIndex].quantity || 1) + 1
+      };
+      return newItems;
+    }
+    
+    // Si no existe, añade nuevo ítem
+    return [
       ...prevItems,
-      { ...product, extras: selectedExtras },
-    ]);
-  };
+      { 
+        ...product, 
+        extras: selectedExtras,
+        quantity: 1 
+      }
+    ];
+  });
+};
 
   const handleClearCart = () => {
     setCartItems([]);
@@ -39,7 +62,7 @@ function App() {
         <Route
           path="/"
           element={
-            <div className="min-h-screen bg-[#0f111a] text-white">
+            <div className="min-h-screen bg-[#0f111a] text-white relative">
               <Header
                 onCartClick={() => setShowCart(!showCart)}
                 categories={categories}
@@ -47,24 +70,22 @@ function App() {
                 onSelectCategory={setSelectedCategory}
                 cartCount={cartItems.length}
               />
-              <main className="p-4">
+              <main className="p-4 pb-20">
                 <Menu
                   items={menuItems}
                   selectedCategory={selectedCategory}
                   addToCart={handleAddToCart}
                 />
-                {showCart && (
-                  <div className="fixed top-20 right-4 w-80 z-50">
-                    <CartModal
-                      isOpen={showCart}
-                      cartItems={cartItems}
-                      removeFromCart={handleRemoveFromCart}
-                      clearCart={handleClearCart}
-                      onClose={() => setShowCart(false)}
-                    />
-                  </div>
-                )}
               </main>
+              
+              {/* Modal fuera del main */}
+              <CartModal
+                isOpen={showCart}
+                cartItems={cartItems}
+                removeFromCart={handleRemoveFromCart}
+                clearCart={handleClearCart}
+                onClose={() => setShowCart(false)}
+              />
             </div>
           }
         />

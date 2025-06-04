@@ -1,65 +1,117 @@
 import { useState } from "react";
+import { Plus } from "lucide-react";
 
 function ProductCard({ product, addToCart }) {
   const [selectedExtras, setSelectedExtras] = useState([]);
+  const [quantity, setQuantity] = useState(1);
 
   const toggleExtra = (extra) => {
     setSelectedExtras((prev) =>
-      prev.includes(extra)
+      prev.some((e) => e.name === extra.name)
         ? prev.filter((e) => e.name !== extra.name)
         : [...prev, extra]
     );
   };
 
-
   const handleAddToCart = () => {
-    addToCart(product, selectedExtras);
-    setSelectedExtras([]); // Limpiar selección después de agregar
+    for (let i = 0; i < quantity; i++) {
+      addToCart(product, selectedExtras);
+    }
+    setSelectedExtras([]);
+    setQuantity(1);
   };
 
+  const totalPrice = (product.price + selectedExtras.reduce((total, extra) => total + extra.price, 0)) * quantity;
+
   return (
-    <div className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-md">
-      <img
-        src={product.image}
-        alt={product.name}
-        className="w-full h-40 object-cover rounded mb-4"
-      />
-      <h3 className="text-xl font-bold dark:text-white">{product.name}</h3>
-      <p className="text-gray-600 dark:text-gray-300">{product.description}</p>
-      <p className="font-semibold mt-2 text-blue-600 dark:text-blue-400">
-        ${product.price}
-      </p>
+    <div className="bg-[#1e2130] rounded-lg overflow-hidden shadow-md border border-gray-700 flex flex-col h-full">
+      {/* Imagen más compacta */}
+      <div className="relative pt-[60%] overflow-hidden">
+        <img
+          src={product.image}
+          alt={product.name}
+          className="absolute top-0 left-0 w-full h-full object-cover"
+          onError={(e) => {
+            e.target.src = '/food-placeholder.png';
+          }}
+        />
+      </div>
 
-      {product.extras?.length > 0 && (
-        <div className="mt-4">
-          <p className="font-medium text-sm text-gray-700 dark:text-gray-300">
-            Selecciona extras:
+      {/* Contenido compacto */}
+      <div className="p-3 flex-grow flex flex-col">
+        <div className="flex justify-between items-start mb-1">
+          <h3 className="text-sm font-semibold text-white line-clamp-1">{product.name}</h3>
+          <p className="text-sm font-medium text-blue-400 whitespace-nowrap ml-2">
+            ${product.price.toFixed(2)}
           </p>
-          <div className="space-y-1 mt-1">
-            {product.extras.map((extra, i) => (
-              <label
-                key={i}
-                className="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedExtras.some((e) => e.name === extra.name)}
-                  onChange={() => toggleExtra(extra)}
-                />
-                <span>{extra.name} {extra.price ? `(+${extra.price}$)` : ''}</span>
+        </div>
 
-              </label>
-            ))}
+        <p className="text-xs text-gray-400 line-clamp-2 mb-2">{product.description}</p>
+
+        {/* Selector de cantidad compacto */}
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-gray-500">Cantidad:</span>
+          <div className="flex items-center space-x-1">
+            <button
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              className="w-6 h-6 flex items-center justify-center bg-gray-700 rounded text-white text-xs"
+            >
+              -
+            </button>
+            <span className="text-xs w-6 text-center">{quantity}</span>
+            <button
+              onClick={() => setQuantity(quantity + 1)}
+              className="w-6 h-6 flex items-center justify-center bg-gray-700 rounded text-white text-xs"
+            >
+              +
+            </button>
           </div>
         </div>
-      )}
 
-      <button
-        onClick={handleAddToCart}
-        className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-      >
-        Agregar al carrito
-      </button>
+        {/* Extras compactos */}
+        {product.extras?.length > 0 && (
+          <details className="group mt-2">
+            <summary className="text-xs text-gray-400 cursor-pointer list-none flex justify-between items-center">
+              <span>Personalizar</span>
+              <span className="text-xs">▼</span>
+            </summary>
+            <div className="mt-2 space-y-2">
+              {product.extras.map((extra, i) => (
+                <label
+                  key={`${product.id}-${i}`}
+                  className="flex items-center justify-between cursor-pointer"
+                >
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedExtras.some(e => e.name === extra.name)}
+                      onChange={() => toggleExtra(extra)}
+                      className="h-3 w-3 text-blue-600 rounded border-gray-600 bg-gray-700"
+                    />
+                    <span className="text-xs text-gray-300">{extra.name}</span>
+                  </div>
+                  <span className="text-xs text-blue-400">+${extra.price.toFixed(2)}</span>
+                </label>
+              ))}
+            </div>
+          </details>
+        )}
+
+        {/* Precio total y botón */}
+        <div className="mt-3 pt-2 border-t border-gray-700 flex justify-between items-center">
+          <div>
+            <p className="text-xs text-gray-400">Total:</p>
+            <p className="text-sm font-bold text-green-400">${totalPrice.toFixed(2)}</p>
+          </div>
+          <button
+            onClick={handleAddToCart}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs flex items-center"
+          >
+            <Plus size={14} className="mr-1" />
+            Agregar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
