@@ -1,14 +1,15 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useState } from 'react';
 import Header from './components/Header';
 import Menu from './components/Menu';
 import CartModal from './components/CartModal';
 import menuItems from './data/products';
-import { useState } from 'react';
 
 // Importa vistas de admin
 import AdminLayout from './pages/admin/AdminLayout';
 import Dashboard from './pages/admin/Dashboard';
 import ProductsAdmin from './pages/admin/ProductsAdmin';
+import OrdersAdmin from './pages/admin/OrdersAdmin';
 
 function App() {
   const [cartItems, setCartItems] = useState([]);
@@ -17,35 +18,35 @@ function App() {
 
   const categories = ['Entradas', 'Platos fuertes', 'Bebidas', 'Postres'];
 
-const handleAddToCart = (product, selectedExtras) => {
-  setCartItems((prevItems) => {
-    // Busca si el producto ya está en el carrito con los mismos extras
-    const existingIndex = prevItems.findIndex(
-      item => item.id === product.id && 
-      JSON.stringify(item.extras) === JSON.stringify(selectedExtras)
-    );
+  const handleAddToCart = (product, selectedExtras) => {
+    setCartItems((prevItems) => {
+      // Busca si el producto ya está en el carrito con los mismos extras
+      const existingIndex = prevItems.findIndex(
+        item => item.id === product.id && 
+        JSON.stringify(item.extras) === JSON.stringify(selectedExtras)
+      );
 
-    if (existingIndex >= 0) {
-      // Si existe, incrementa la cantidad
-      const newItems = [...prevItems];
-      newItems[existingIndex] = {
-        ...newItems[existingIndex],
-        quantity: (newItems[existingIndex].quantity || 1) + 1
-      };
-      return newItems;
-    }
-    
-    // Si no existe, añade nuevo ítem
-    return [
-      ...prevItems,
-      { 
-        ...product, 
-        extras: selectedExtras,
-        quantity: 1 
+      if (existingIndex >= 0) {
+        // Si existe, incrementa la cantidad
+        const newItems = [...prevItems];
+        newItems[existingIndex] = {
+          ...newItems[existingIndex],
+          quantity: (newItems[existingIndex].quantity || 1) + 1
+        };
+        return newItems;
       }
-    ];
-  });
-};
+      
+      // Si no existe, añade nuevo ítem
+      return [
+        ...prevItems,
+        { 
+          ...product, 
+          extras: selectedExtras,
+          quantity: 1 
+        }
+      ];
+    });
+  };
 
   const handleClearCart = () => {
     setCartItems([]);
@@ -78,7 +79,6 @@ const handleAddToCart = (product, selectedExtras) => {
                 />
               </main>
               
-              {/* Modal fuera del main */}
               <CartModal
                 isOpen={showCart}
                 cartItems={cartItems}
@@ -94,10 +94,10 @@ const handleAddToCart = (product, selectedExtras) => {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="products" element={<ProductsAdmin />} />
+          <Route path="orders" element={<OrdersAdmin />} />
         </Route>
       </Routes>
     </Router>
   );
 }
-
 export default App;
